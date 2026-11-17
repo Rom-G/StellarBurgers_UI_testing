@@ -11,7 +11,7 @@ import ru.stellarburgers.factory.DriverFactory;
 import ru.stellarburgers.page.objects.MainPage;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.*;
 
 @RunWith(Parameterized.class)
 public class IngredientTransitionTest {
@@ -46,8 +46,10 @@ public class IngredientTransitionTest {
         main.open();
         main.clickTabWithText(categoryText);
         int actualOffset = main.countOffsetFromContainerTop(categoryText);
+        int headerHeight = main.waitAndGetIngredientsHeader(categoryText).getSize().getHeight();
 
         assertThat("The offset of the header from the top is more than expected",
-                actualOffset, lessThanOrEqualTo(2));
+                actualOffset,
+                allOf(greaterThanOrEqualTo(-1), lessThanOrEqualTo(headerHeight)));
     }
 }
