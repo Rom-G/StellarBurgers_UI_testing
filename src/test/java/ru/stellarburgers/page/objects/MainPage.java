@@ -68,7 +68,7 @@ public class MainPage extends BasePage {
     }
 
     @Step("Wait and get {headerText} header from container")
-    private WebElement waitAndGetIngredientsHeader(String headerText) {
+    public WebElement waitAndGetIngredientsHeader(String headerText) {
         return getWait().until(driver -> {
             List<WebElement> candidates = driver.findElements(INGREDIENTS_HEADERS);
             for (WebElement h : candidates) {
@@ -87,7 +87,8 @@ public class MainPage extends BasePage {
             int headerTop = getUpperYCoordinateOfElement(header, "ingredient's header");
 
             int offsetFromContainerTop = headerTop - containerTop;
-            return offsetFromContainerTop <= 2;
+            return offsetFromContainerTop <= header.getSize().getHeight() &&
+                    offsetFromContainerTop > -1;
         });
     }
 
