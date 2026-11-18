@@ -1,10 +1,7 @@
 package ru.stellarburgers.pageobjects;
 
 import io.qameta.allure.Step;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.List;
@@ -21,6 +18,7 @@ public class MainPage extends BasePage {
     private final By INGREDIENTS_HEADERS = By.cssSelector("h2.text.text_type_main-medium");
 
     private final String TAB_LOCATOR_TEMPLATE = "//span[normalize-space()='%s']/ancestor::div[contains(@class, 'tab_tab')]";
+    private final String TAB_CURRENT_CLASS_FRAGMENT = "tab_tab_type_current";
 
     public MainPage(WebDriver driver) {
         super(driver);
@@ -46,13 +44,38 @@ public class MainPage extends BasePage {
     public void clickTabWithText(String tabText) {
         By tabLocator = getTabByText(tabText);
         WebElement tab = getWait().until(ExpectedConditions.elementToBeClickable(tabLocator));
-        ((JavascriptExecutor) getDriver()).executeScript("arguments[0].click();", tab);
+
+        if (isTabCurrent(tab)) {
+            scrollIngredientsContainer();
+            waitTabStopCurrent(tabLocator);
+        }
+
+        clickElement(tabLocator);
     }
 
     @Step("Get a tab by its name")
     private By getTabByText(String tabName) {
         String xpath = String.format(TAB_LOCATOR_TEMPLATE, tabName);
         return By.xpath(xpath);
+    }
+
+    @Step("Check that the tab is current")
+    private boolean isTabCurrent(WebElement tab) {
+        return tab.getAttribute("class").contains(TAB_CURRENT_CLASS_FRAGMENT);
+    }
+
+    @Step("Scroll to another section of the ingredients container")
+    private void scrollIngredientsContainer() {
+        ((JavascriptExecutor) getDriver()).executeScript(
+                "var h = Array.from(document.querySelectorAll('h2'))"
+                        + ".find(e => e.textContent.trim() === 'Соусы' || e.textContent.trim() === 'Начинки');"
+                        + "if (h) h.scrollIntoView({behavior:'instant', block:'start'});");
+    }
+
+    @Step("Waiting for the tab to stop being current")
+    private void waitTabStopCurrent(By tabLocator) {
+        getWait().until(d ->
+                !d.findElement(tabLocator).getAttribute("class").contains(TAB_CURRENT_CLASS_FRAGMENT));
     }
 
     @Step("Count the distance from the header {headerText} to the top of the container")
@@ -69,8 +92,8 @@ public class MainPage extends BasePage {
 
     @Step("Wait and get {headerText} header from container")
     public WebElement waitAndGetIngredientsHeader(String headerText) {
-        return getWait().until(driver -> {
-            List<WebElement> candidates = driver.findElements(INGREDIENTS_HEADERS);
+        return getWait().until(d -> {
+            List<WebElement> candidates = d.findElements(INGREDIENTS_HEADERS);
             for (WebElement h : candidates) {
                 if (h.isDisplayed() && h.getText().trim().contains(headerText)) {
                     return h;
