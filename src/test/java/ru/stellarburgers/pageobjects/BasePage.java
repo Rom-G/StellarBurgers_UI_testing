@@ -2,15 +2,14 @@ package ru.stellarburgers.pageobjects;
 
 import io.qameta.allure.Step;
 import lombok.Getter;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 @Getter
 public abstract class BasePage {
+
+    private final By MODAL_OVERLAY = By.cssSelector(".Modal_modal_overlay__x2ZCr");
 
     private final WebDriver driver;
     private final WebDriverWait wait;
@@ -21,9 +20,16 @@ public abstract class BasePage {
     }
 
     public void clickElement(By locator) {
+        waitAllOverlaysClosed();
         WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
         ((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", element);
         element.click();
+    }
+
+    protected void waitAllOverlaysClosed() {
+        wait.until(d -> d.findElements(MODAL_OVERLAY)
+                .stream()
+                .noneMatch(WebElement::isDisplayed));
     }
 
     @Step("Enter {value} in the field")
