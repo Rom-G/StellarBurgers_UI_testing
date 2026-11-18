@@ -9,10 +9,10 @@ import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import ru.stellarburgers.api.models.UserAuthResponseModel;
 import ru.stellarburgers.factory.DriverFactory;
-import ru.stellarburgers.page.objects.AccountPage;
-import ru.stellarburgers.page.objects.LoginPage;
-import ru.stellarburgers.page.objects.MainPage;
-import ru.stellarburgers.page.objects.RegistrationPage;
+import ru.stellarburgers.pageobjects.AccountPage;
+import ru.stellarburgers.pageobjects.LoginPage;
+import ru.stellarburgers.pageobjects.MainPage;
+import ru.stellarburgers.pageobjects.RegistrationPage;
 
 import static org.junit.Assert.assertEquals;
 import static ru.stellarburgers.api.steps.UserSteps.deleteUser;

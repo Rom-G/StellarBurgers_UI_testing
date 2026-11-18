@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.openqa.selenium.WebDriver;
 import ru.stellarburgers.factory.DriverFactory;
-import ru.stellarburgers.page.objects.MainPage;
+import ru.stellarburgers.pageobjects.MainPage;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

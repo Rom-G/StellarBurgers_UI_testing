@@ -12,7 +12,7 @@ import org.openqa.selenium.WebDriver;
 import ru.stellarburgers.api.models.UserAuthResponseModel;
 import ru.stellarburgers.data.LoginFlowType;
 import ru.stellarburgers.factory.DriverFactory;
-import ru.stellarburgers.page.objects.*;
+import ru.stellarburgers.pageobjects.*;
 
 import static org.junit.Assert.assertEquals;
 import static ru.stellarburgers.api.steps.UserSteps.*;
