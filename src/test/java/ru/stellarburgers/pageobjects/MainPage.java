@@ -1,0 +1,131 @@
+package ru.stellarburgers.pageobjects;
+
+import io.qameta.allure.Step;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import java.util.List;
+
+public class MainPage extends BasePage {
+
+    private final By LOGIN_BUTTON = By.xpath("//button[contains(text(), 'Войти')]");
+    private final By ACCOUNT_LINK = By.cssSelector("a[href='/account']");
+    private final By INGREDIENT_CONTAINER =
+            By.xpath(
+                    "//h2[normalize-space()='Булки']" +
+                    "/ancestor::div[contains(@class, 'menuContainer')]");
+
+    private final By INGREDIENTS_HEADERS = By.cssSelector("h2.text.text_type_main-medium");
+
+    private final String TAB_LOCATOR_TEMPLATE = "//span[normalize-space()='%s']/ancestor::div[contains(@class, 'tab_tab')]";
+    private final String TAB_CURRENT_CLASS_FRAGMENT = "tab_tab_type_current";
+
+    public MainPage(WebDriver driver) {
+        super(driver);
+    }
+
+    @Step("Open the main page and wait for the login button to load")
+    public void open() {
+        getDriver().get("https://stellarburgers.education-services.ru/");
+        getWait().until(ExpectedConditions.visibilityOfElementLocated(LOGIN_BUTTON));
+    }
+
+    @Step("Click the login button")
+    public void clickLoginButton() {
+        clickElement(LOGIN_BUTTON);
+    }
+
+    @Step("Click the personal account link")
+    public void clickPersonalAccountLink() {
+        clickElement(ACCOUNT_LINK);
+    }
+
+    @Step("Click on the {tabText} tab by JavascriptExecutor")
+    public void clickTabWithText(String tabText) {
+        By tabLocator = getTabByText(tabText);
+        WebElement tab = getWait().until(ExpectedConditions.elementToBeClickable(tabLocator));
+
+        if (isTabCurrent(tab)) {
+            scrollIngredientsContainer();
+            waitTabStopCurrent(tabLocator);
+        }
+
+        clickElement(tabLocator);
+    }
+
+    @Step("Get a tab by its name")
+    private By getTabByText(String tabName) {
+        String xpath = String.format(TAB_LOCATOR_TEMPLATE, tabName);
+        return By.xpath(xpath);
+    }
+
+    @Step("Check that the tab is current")
+    private boolean isTabCurrent(WebElement tab) {
+        return tab.getAttribute("class").contains(TAB_CURRENT_CLASS_FRAGMENT);
+    }
+
+    @Step("Scroll to another section of the ingredients container")
+    private void scrollIngredientsContainer() {
+        ((JavascriptExecutor) getDriver()).executeScript(
+                "var h = Array.from(document.querySelectorAll('h2'))"
+                        + ".find(e => e.textContent.trim() === 'Соусы' || e.textContent.trim() === 'Начинки');"
+                        + "if (h) h.scrollIntoView({behavior:'instant', block:'start'});");
+    }
+
+    @Step("Waiting for the tab to stop being current")
+    private void waitTabStopCurrent(By tabLocator) {
+        getWait().until(d ->
+                !d.findElement(tabLocator).getAttribute("class").contains(TAB_CURRENT_CLASS_FRAGMENT));
+    }
+
+    @Step("Count the distance from the header {headerText} to the top of the container")
+    public int countOffsetFromContainerTop(String headerText) {
+        WebElement container = getDriver().findElement(INGREDIENT_CONTAINER);
+        WebElement header = waitAndGetIngredientsHeader(headerText);
+        waitIngredientsScrollFinish(container, header);
+
+        int containerTop = getUpperYCoordinateOfElement(container, "ingredient's container");
+        int headerTop = getUpperYCoordinateOfElement(header, "ingredient's header");
+
+        return headerTop - containerTop;
+    }
+
+    @Step("Wait and get {headerText} header from container")
+    public WebElement waitAndGetIngredientsHeader(String headerText) {
+        return getWait().until(d -> {
+            List<WebElement> candidates = d.findElements(INGREDIENTS_HEADERS);
+            for (WebElement h : candidates) {
+                if (h.isDisplayed() && h.getText().trim().contains(headerText)) {
+                    return h;
+                }
+            }
+            return null;
+        });
+    }
+
+    @Step("Waiting for the ingredient's header to scroll to the top of the container")
+    private void waitIngredientsScrollFinish(WebElement container, WebElement header) {
+        getWait().until(d -> {
+            int containerTop = getUpperYCoordinateOfElement(container, "ingredient's container");
+            int headerTop = getUpperYCoordinateOfElement(header, "ingredient's header");
+
+            int offsetFromContainerTop = headerTop - containerTop;
+            return offsetFromContainerTop <= header.getSize().getHeight() &&
+                    offsetFromContainerTop > -1;
+        });
+    }
+
+    @Step("Get the upper Y coordinate of an {elementName}")
+    private int getUpperYCoordinateOfElement(WebElement element, String elementName) {
+        Object result = ((JavascriptExecutor) getDriver()).executeScript(
+                "return arguments[0].getBoundingClientRect().top;", element);
+
+        if (result instanceof Double) {
+            return ((Double) result).intValue();
+        } else if (result instanceof Number) {
+            return ((Number) result).intValue();
+        } else {
+            throw new IllegalArgumentException("Unexpected type returned from script: " + result.getClass());
+        }
+    }
+}
